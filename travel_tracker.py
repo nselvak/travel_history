@@ -40,9 +40,10 @@ def main():
     
     # Display instructions
     st.markdown("""
-    This interactive map shows the countries you have visited and the number of times you've been there. Hover over the countries to see details such as:
+    Map shows the countries visited, the number of times you've been there. Hover over the countries to see details such as:
     - The number of visits
     - The cities you have visited in each country
+    - Total number of days spent in the country
     """)
     
     # Set up Google Sheets API and fetch data
