@@ -5,6 +5,9 @@ import geopandas as gpd
 import folium
 import streamlit as st
 from streamlit_folium import st_folium  # Import st_folium instead of folium_static
+from folium import plugins
+from folium.plugins import HeatMap
+from branca.colormap import linear
 
 # Google Sheets API setup
 def setup_google_sheets():
@@ -60,14 +63,18 @@ def main():
         # Assign the EPSG:4326 CRS (WGS 84)
         world.set_crs("EPSG:4326", allow_override=True, inplace=True)
 
-    # Ensure that 'SOV_A3' exists
-    # if 'SOV_A3' in world.columns:
-    #     print(world['SOV_A3'])
-    # else:
-    #     print("The expected column 'SOV_A3' does not exist.")
-    
     # Add countries boundaries to the map
-    folium.GeoJson(world).add_to(m)
+    folium.GeoJson(world, style_function=lambda x: {
+        'color': 'black',  # Set country border color
+        'weight': 1,  # Border thickness
+        'fillOpacity': 0  # No fill color for borders
+    }).add_to(m)
+
+    # Get the maximum number of visits
+    max_visits = data['Visits'].max()
+
+    # Define a dynamic color scale using linear colormap (warm color range)
+    color_scale = linear.YlOrRd_09.scale(0, max_visits)  # Yellow to Red color scale
 
     # Add country-specific markers or choropleth colors
     for _, row in data.iterrows():
@@ -75,8 +82,8 @@ def main():
         country_name = row['Country']
         visits = row['Visits']
         
-        # Set color based on the number of visits
-        color = "blue" if visits > 5 else "green"
+        # Set the color based on the dynamic scale
+        color = color_scale(visits)
         
         # Create a GeoJson popup with visit details
         popup = folium.Popup(f"<b>{country_name}</b><br>Visits: {visits}<br>Cities: {row['Places']}", max_width=300)
@@ -86,17 +93,17 @@ def main():
             world[world['SOV_A3'] == country_code].geometry,
             style_function=lambda x, color=color: {
                 'fillColor': color, 
-                'color': 'black', 
-                'weight': 1, 
-                'fillOpacity': 0.5
+                'color': 'black',  # Add border color
+                'weight': 1,  # Border thickness
+                'fillOpacity': 0.7  # Set fill opacity
             },
-            popup=popup
+            popup=popup  # Show popup with country details
         ).add_to(m)
 
     # Add ocean color (background color for the map)
     m.get_root().html.add_child(folium.Element("""
     <style>
-        .leaflet-container { background-color: #0000FF !important; }
+        .leaflet-container { background-color: #FFFFFF !important; }
     </style>
     """))
 
@@ -113,7 +120,7 @@ def main():
 
     # Display flags by looping through unique countries
     for _, row in data.iterrows():
-        country_code = row['Country Code 2']
+        country_code = row['Country Code 2']  # Using 2-letter country code
         country_name = row['Country']
         if country_code:
             flag_url = f"https://flagcdn.com/64x48/{country_code.lower()}.png"  # Correct flag URL
