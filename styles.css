@@ -1,0 +1,66 @@
+/* Global styles for the app */
+.stApp {
+    background: linear-gradient(to right, #00c6ff, #0072ff); /* Gradient background */
+    font-family: 'Arial', sans-serif;
+}
+
+/* Adding a shadow to the header */
+h1, h2 {
+    text-align: center;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Styling the map container */
+#map {
+    border: 2px solid #0072ff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+/* Flag container styles */
+.flag-container {
+    text-align: center;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.flag-container img {
+    margin-bottom: 5px;
+}
+
+.flag-container img:hover {
+    transform: scale(1.2);
+}
+
+/* Custom button styles */
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 800px) {
+    .flag-container {
+        width: 48%;
+    }
+}
+
+@media (max-width: 500px) {
+    .flag-container {
+        width: 100%;
+    }
+}
