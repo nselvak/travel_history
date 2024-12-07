@@ -1,8 +1,10 @@
 import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import plotly.express as px
+import geopandas as gpd
+import folium
 import streamlit as st
+from streamlit_folium import st_folium  # Import st_folium instead of folium_static
 
 # Google Sheets API setup
 def setup_google_sheets():
@@ -25,7 +27,7 @@ def fetch_and_clean_data(_sheet):
     })
 
     # Retain 'Country Code' by merging it back from the original DataFrame
-    result = grouped_data.merge(data[["Country", "Country Code"]].drop_duplicates(), on="Country", how="left")
+    result = grouped_data.merge(data[["Country", "Country Code", "Country Code 2"]].drop_duplicates(), on="Country", how="left")
 
     return result
 
@@ -47,47 +49,71 @@ def main():
     # Fetch and clean data
     data = fetch_and_clean_data(sheet)
     
-    # Generate Plotly map
-    fig = px.choropleth(
-        data,
-        locations="Country",
-        locationmode="country names",
-        color="Visits",  # Color intensity based on the number of visits
-        hover_name="Country",  # Hover over country name
-        hover_data={"Visits": True, "Places": True, "Country Code": False},  # Show visits and cities on hover
-        color_continuous_scale='YlOrRd',  # Warm color scale (yellow to red)
-        title="My Travel Map",
-        projection="natural earth",  # More natural-looking map projection
-        template="plotly_dark"  # Choose a darker, modern template for aesthetics
-    )
+    # Initialize Folium Map
+    m = folium.Map(location=[1.3521, 103.8198], zoom_start=2, tiles="CartoDB positron")
     
-    # Set the color of the water bodies and land
-    fig.update_geos(
-        landcolor="lightgray",  # Color of the land (countries that are not visited will be light gray)
-        showlakes=True,  # Show lakes (ocean-like features)
-        lakecolor="lightblue",  # Color of lakes (should be similar to water bodies)
-        showland=True,  # Show land
-        showcoastlines=True,  # Show coastlines
-        coastlinecolor="white",  # Coastline color
-        showcountries=True,  # Show countries borders
-        countrycolor="white",  # Borders of countries in white
-        projection_scale=4,  # Adjust zoom level for the center (Singapore)
-        center={"lat": 1.3521, "lon": 103.8198}  # Center on Singapore
-    )
+    # Load GeoPandas world shapefile for country boundaries
+    world = gpd.read_file("image/world.shp")
 
-    # Display the map in Streamlit
-    st.plotly_chart(fig)
+    # Check if the CRS is set
+    if world.crs is None:
+        # Assign the EPSG:4326 CRS (WGS 84)
+        world.set_crs("EPSG:4326", allow_override=True, inplace=True)
+
+    # Ensure that 'SOV_A3' exists
+    # if 'SOV_A3' in world.columns:
+    #     print(world['SOV_A3'])
+    # else:
+    #     print("The expected column 'SOV_A3' does not exist.")
+    
+    # Add countries boundaries to the map
+    folium.GeoJson(world).add_to(m)
+
+    # Add country-specific markers or choropleth colors
+    for _, row in data.iterrows():
+        country_code = row['Country Code']
+        country_name = row['Country']
+        visits = row['Visits']
+        
+        # Set color based on the number of visits
+        color = "blue" if visits > 5 else "green"
+        
+        # Create a GeoJson popup with visit details
+        popup = folium.Popup(f"<b>{country_name}</b><br>Visits: {visits}<br>Cities: {row['Places']}", max_width=300)
+        
+        # Add country-specific GeoJSON to map
+        folium.GeoJson(
+            world[world['SOV_A3'] == country_code].geometry,
+            style_function=lambda x, color=color: {
+                'fillColor': color, 
+                'color': 'black', 
+                'weight': 1, 
+                'fillOpacity': 0.5
+            },
+            popup=popup
+        ).add_to(m)
+
+    # Add ocean color (background color for the map)
+    m.get_root().html.add_child(folium.Element("""
+    <style>
+        .leaflet-container { background-color: #0000FF !important; }
+    </style>
+    """))
+
+    # Display the map in Streamlit (ensure it's only called once)
+    st.markdown("### Interactive Travel Map")
+    st_folium(m)  # Use st_folium instead of folium_static
     
     # Display flags of countries visited below the map
     st.markdown("### Flags of Countries Visited")
 
     # Create a container for flags
-    cols = st.columns(5)  # Split into 5 columns to limit the number of flags per row
+    cols = st.columns(5)  # Split into 5 columns
     col_idx = 0  # Start with the first column
 
-    # Display flags by looping through the unique countries
+    # Display flags by looping through unique countries
     for _, row in data.iterrows():
-        country_code = row['Country Code']
+        country_code = row['Country Code 2']
         country_name = row['Country']
         if country_code:
             flag_url = f"https://flagcdn.com/64x48/{country_code.lower()}.png"  # Correct flag URL
@@ -98,7 +124,7 @@ def main():
             </div>
             """, unsafe_allow_html=True)
             col_idx += 1
-            if col_idx >= 5:  # Once 5 flags are displayed, move to the next row
+            if col_idx >= 5:  # Move to the next row after 5 flags
                 col_idx = 0
 
 if __name__ == "__main__":
