@@ -1,3 +1,10 @@
+"""
+Map visualization for the Travel Tracker Map Streamlit app.
+This script creates a map visualization using Folium and GeoPandas.
+It loads a world shapefile, colors countries based on the number of visits,
+and adds popups with travel details.
+"""
+
 import geopandas as gpd
 import folium
 from branca.colormap import linear

@@ -1,3 +1,9 @@
+"""
+Main script for the Travel Tracker Map Streamlit app.
+This script loads custom CSS, fetches travel data from Google Sheets,
+generates a map, and displays the map and flags of visited countries.
+"""
+
 import streamlit as st
 from google_sheets import setup_google_sheets, fetch_and_clean_data
 from map_visualization import create_map

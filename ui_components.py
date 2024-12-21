@@ -1,3 +1,9 @@
+"""
+UI components for the Travel Tracker Map Streamlit app.
+This script contains functions to load custom CSS, display an interactive map,
+and display flags of visited countries.
+"""
+
 import streamlit as st
 from streamlit_folium import st_folium
 
