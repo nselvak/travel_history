@@ -11,14 +11,16 @@ The Travel Tracker Map is a Streamlit application that visualizes your travel hi
 
 ## Project Structure
 
-travel_history/ 
-├── main.py 
-├── ui_components.py 
-├── google_sheets.py 
-├── map_visualization.py 
-├── styles.css 
+```plaintext
+travel_history/
+├── main.py
+├── ui_components.py
+├── google_sheets.py
+├── map_visualization.py
+├── styles.css
 ├── requirements.txt
 └── README.md
+```
 
 
 ### `main.py`
