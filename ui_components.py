@@ -9,7 +9,9 @@ def load_css():
 # Function to display the interactive map
 def display_map(m):
     st.markdown("### Interactive Travel Map")
-    st_folium(m)
+    
+    # Directly display the map with st_folium without extra div wrapping
+    st_folium(m, width=700, returned_objects=[])
 
 # Function to display flags of countries visited
 def display_flags(data):
